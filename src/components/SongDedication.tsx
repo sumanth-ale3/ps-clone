@@ -99,7 +99,7 @@ const SongDedication: React.FC<SongDedicationProps> = ({ onNext }) => {
     {
       id: 8,
       message:
-        "This is the final note in my heart’s playlist… I can’t say more than this, you are everything 🎼💞",
+        "This is the final note in my heart's playlist… I can't say more than this, you are everything 🎼💞",
       title: "Ninnu Chudagane",
       artist: "Devi Sri Prasad (DSP)",
       audioSrc:
