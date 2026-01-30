@@ -10,6 +10,7 @@ import SongDedication from './components/SongDedication';
 import SpinWheel from './components/SpinWheel';
 import TripCountdown from './components/TripCountdown';
 import FinalMessage from './components/FinalMessage';
+import CassettePlayer from './components/CassettePlayer';
 import Navigation from './components/Navigation';
 import EasterEgg from './components/EasterEgg';
 
@@ -57,6 +58,8 @@ function App() {
         return <TripCountdown onNext={() => setCurrentSection('final')} />;
       case 'final':
         return <FinalMessage />;
+      case 'cassette':
+        return <CassettePlayer />;
       default:
         return <SplashScreen onComplete={() => setCurrentSection('lovemeter')} />;
     }

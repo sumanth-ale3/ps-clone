@@ -9,7 +9,7 @@ interface NavigationProps {
 
 const sections = [
   'splash',
-  'lovemeter', 
+  'lovemeter',
   'adventure',
   'puzzle',
   'voice',
@@ -18,7 +18,8 @@ const sections = [
   'songs',
   'spin',
   'countdown',
-  'final'
+  'final',
+  'cassette'
 ];
 
 const Navigation: React.FC<NavigationProps> = ({ currentSection, onNavigate, isDark }) => {
