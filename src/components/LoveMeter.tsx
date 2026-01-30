@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Heart, Zap } from "lucide-react";
 
 interface LoveMeterProps {
@@ -25,7 +25,7 @@ const LoveMeter: React.FC<LoveMeterProps> = ({ onNext }) => {
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
+          await videoRef.current.play();
           setCameraReady(true);
         }
       } catch (err) {
@@ -45,6 +45,7 @@ const LoveMeter: React.FC<LoveMeterProps> = ({ onNext }) => {
     };
   }, []);
 
+  /* ---------------- SCAN LOGIC ---------------- */
   const startScan = () => {
     setIsScanning(true);
     setScanProgress(0);
@@ -57,167 +58,154 @@ const LoveMeter: React.FC<LoveMeterProps> = ({ onNext }) => {
           setTimeout(() => {
             setIsScanning(false);
             setShowResult(true);
-          }, 500);
+          }, 600);
           return 100;
         }
         return prev + 2;
       });
-    }, 50);
+    }, 45);
   };
 
+  /* ---------------- UI ---------------- */
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center relative bg-gradient-to-br from-blue-100 via-pink-100 to-purple-100 overflow-hidden">
       {/* Header */}
-      <div className="mb-10 z-10">
-        <h2 className="text-4xl font-bold text-gray-800 mb-3 text-glow-blue">
-          Doraemon's Cuteness Scanner
-        </h2>
-        <p className="text-gray-600 font-dancing text-lg">
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
+          Doraemon's Cuteness Scanner 💙
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base">
           Advanced cuteness detection system ✨
         </p>
       </div>
 
       {/* Scanner Device */}
-      <div className="relative mb-10 z-10">
-        <div className="w-72 h-72 gradient-doraemon rounded-3xl p-6 shadow-dreamy animate-pulse-glow">
-          {/* Screen */}
-          <div className="w-full h-44 bg-black rounded-2xl p-0 relative overflow-hidden shadow-inner">
-            {/* Camera Feed */}
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
-            />
+      <div className="relative w-72 rounded-3xl p-4 bg-white/60 backdrop-blur-md shadow-xl">
+        {/* Screen */}
+        <div className="relative w-full h-44 bg-black rounded-2xl overflow-hidden">
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            playsInline
+            muted
+          />
 
-            {/* Black overlay for better text contrast */}
-            {(isScanning || showResult) && (
-              <div className="absolute inset-0 bg-black bg-opacity-40 z-0" />
-            )}
+          {/* Overlay */}
+          {(isScanning || showResult) && (
+            <div className="absolute inset-0 bg-black/40" />
+          )}
 
-            {/* Scan overlay */}
-            {isScanning && (
-              <>
-                <div
-                  className="absolute left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-pink-400 animate-pulse shadow-glow z-10"
-                  style={{ top: `${(scanProgress / 100) * 100}%` }}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-green-400 font-mono text-sm z-10">
-                  <div className="mb-3 animate-pulse">SCANNING... 🔍</div>
-                  <div className="text-3xl font-bold text-glow-blue">
-                    {scanProgress}%
-                  </div>
-                  <div className="mt-3 text-xs text-center px-2">
-                    {scanProgress < 30 && "Detecting smile frequency..."}
-                    {scanProgress >= 30 &&
-                      scanProgress < 60 &&
-                      "Measuring sparkle intensity..."}
-                    {scanProgress >= 60 &&
-                      scanProgress < 90 &&
-                      "Calculating adorableness..."}
-                    {scanProgress >= 90 && "Cuteness overload imminent..."}
-                  </div>
-                </div>
-              </>
-            )}
+          {/* Idle */}
+          {!isScanning && !showResult && cameraReady && (
+            <div className="absolute inset-0 flex items-center justify-center text-green-400 font-mono text-sm animate-pulse">
+              READY TO SCAN ⚡
+            </div>
+          )}
 
-            {showResult && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center h-full text-pink-400 animate-fade-in-up z-10">
-                <Heart className="w-16 h-16 mb-3 animate-heart-beat text-glow-pink" />
-                <div className="font-mono text-2xl font-bold">100%</div>
-                <div className="text-sm mt-2 font-bold animate-pulse">
-                  CUTENESS OVERLOAD 💕
-                </div>
-                <div className="text-xs mt-3 text-center px-2">
-                  ERROR: Too adorable for standard measurement
-                </div>
+          {/* Scanning */}
+          {isScanning && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-green-300 font-mono z-10">
+              <div className="mb-2 text-xs tracking-widest">SCANNING</div>
+              <div className="text-3xl font-bold">{scanProgress}%</div>
+              <div className="mt-3 text-[11px] text-center px-3 opacity-80">
+                {scanProgress < 30 && "Detecting smile frequency…"}
+                {scanProgress >= 30 &&
+                  scanProgress < 60 &&
+                  "Analyzing sparkle levels…"}
+                {scanProgress >= 60 &&
+                  scanProgress < 90 &&
+                  "Measuring heart resonance…"}
+                {scanProgress >= 90 && "Cuteness limit exceeded…"}
               </div>
-            )}
 
-            {/* Ready Text */}
-            {!isScanning && !showResult && cameraReady && (
-              <div className="absolute inset-0 flex items-center justify-center text-green-400 font-mono text-base animate-pulse z-10">
-                READY TO SCAN ⚡
+              <div
+                className="absolute left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-pink-400"
+                style={{ top: `${scanProgress}%` }}
+              />
+            </div>
+          )}
+
+          {/* Result */}
+          {showResult && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-pink-400 z-10 animate-fade-in">
+              <Heart className="w-14 h-14 mb-2 animate-heart-beat" />
+              <div className="text-2xl font-bold">100%</div>
+              <div className="text-xs mt-2 font-semibold">
+                CUTENESS OVERLOAD 💕
               </div>
-            )}
-          </div>
+              <div className="text-[10px] mt-2 opacity-80 text-center px-3">
+                ERROR: Too adorable for standard measurement
+              </div>
+            </div>
+          )}
+        </div>
 
-          {/* Controls */}
-          <div className="mt-6 flex justify-center">
+        {/* Controls */}
+        {/* {!cameraDenied && ( */}
+        {(cameraReady && !isScanning && !showResult) && (
+          <div className="mt-5 flex justify-center">
             <button
               onClick={startScan}
-              disabled={isScanning || !cameraReady}
-              className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-8 rounded-full flex items-center space-x-3 transition-all transform hover:scale-105 disabled:scale-100 shadow-romantic focus-romantic"
+              disabled={!cameraReady || isScanning}
+              className="flex items-center gap-2 px-7 py-3 rounded-full text-white font-semibold
+              bg-gradient-to-r from-pink-500 to-red-500
+              disabled:opacity-50 disabled:scale-100
+              transition-transform hover:scale-105"
             >
               <Zap className="w-5 h-5" />
-              <span>{isScanning ? "Scanning..." : "Scan"}</span>
+              {isScanning ? "Scanning…" : "Scan"}
             </button>
           </div>
-        </div>
+        )}
+
+        {/* )} */}
       </div>
 
-      {/* Results */}
+      {/* Result Card */}
       {showResult && (
-        <div className="animate-fade-in-up z-10 px-4">
-          {/* Results Card */}
-          <div className="card-romantic rounded-2xl p-6 shadow-dreamy mb-6 max-w-xs mx-auto text-center bg-white/80 backdrop-blur-md">
-            <h3 className="text-2xl font-bold text-pink-500 mb-3 animate-pulse">
-              💖 Scan Results 💖
-            </h3>
+        <div className="mt-4 max-w-xs w-full bg-white/80 backdrop-blur-md rounded-2xl p-5 shadow-xl animate-fade-in">
+          <h3 className="text-xl font-bold text-pink-500 mb-3">
+            💖 Scan Results 💖 
+          </h3>
 
-            <div className="space-y-3 text-left text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Smile:</span>
-                <span className="text-pink-500 font-bold">Perfect ✨</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Eye Sparkle:</span>
-                <span className="text-pink-500 font-bold">Max 💫</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">
-                  Overall Cuteness:
-                </span>
-                <span className="text-pink-500 font-bold">Off Charts 💕</span>
-              </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Smile</span>
+              <span className="font-bold text-pink-500">Perfect ✨</span>
             </div>
-
-            {/* Sweet Compliment */}
-            <div className="mt-4 p-3 bg-gradient-to-r from-pink-100 to-pink-200 rounded-lg shadow-inner">
-              <p className="text-base font-dancing text-pink-700 font-bold leading-snug">
-                You're not just cute... you're the most beautiful soul in the
-                entire universe 💙✨ inside and out.
-              </p>
+            <div className="flex justify-between">
+              <span>Eye Sparkle</span>
+              <span className="font-bold text-pink-500">Maximum 💫</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Overall</span>
+              <span className="font-bold text-pink-500">Off the charts 💕</span>
             </div>
           </div>
 
-          <button
-            onClick={onNext}
-            className="
-            bg-gradient-to-r from-pink-400 to-blue-400 hover:from-pink-500 hover:to-blue-500
-            text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:scale-105
-            focus:outline-none focus:ring-2 focus:ring-pink-300 focus:ring-opacity-50
-            animate-fade-in-delayed"
-          >
-            What's Next? ✨
-          </button>
+          <p className="mt-4 text-sm text-pink-700 font-medium leading-relaxed">
+            You're not just cute… you're the kind of beautiful that makes hearts
+            feel safe 💙
+          </p>
         </div>
       )}
 
-      {cameraDenied && (
-        <div className="text-center space-y-4 mt-6">
-          <p className="text-gray-600 leading-relaxed text-xs">
-            📸 No camera? No problem! But if you can, show your lovely face so
-            Doraemon can scan all your cuteness 💕
-          </p>
-
-          <button
-            onClick={onNext}
-            className="bg-gradient-to-r from-pink-500 to-blue-500 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:scale-105 transition"
-          >
-            Skip Scan ➡️
-          </button>
+      {/* Camera Denied */}
+      {(cameraDenied && !cameraReady) && (
+        <div className="mt-6 text-xs text-gray-600 max-w-xs text-center">
+          No camera? Totally okay 💕 Doraemon already knows you’re adorable.
         </div>
+      )}
+
+      {(showResult || cameraDenied) && (
+        <button
+          onClick={onNext}
+          className="my-4 px-8 py-3 rounded-full text-white font-semibold
+          bg-gradient-to-r from-pink-400 to-blue-400
+          hover:scale-105 transition-transform"
+        >
+          Continue the Journey ✨
+        </button>
       )}
     </div>
   );

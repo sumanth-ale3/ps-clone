@@ -486,6 +486,23 @@
     0 0 20px rgba(168, 223, 255, 0.4);
 }
 
+/* Cream color utilities */
+.bg-cream-100 {
+  background-color: #fefcf0;
+}
+
+.bg-cream-200 {
+  background-color: #fef7e0;
+}
+
+.border-cream-300 {
+  border-color: #f4e4bc;
+}
+
+.border-cream-400 {
+  border-color: #e8d5a3;
+}
+
 /* Loading states */
 .loading-shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

@@ -166,7 +166,11 @@ const AdventureStory: React.FC<AdventureStoryProps> = ({ onNext }) => {
     ]);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-sm w-full">
+          <div className="absolute top-0 left-0 right-0 flex justify-between px-6 py-4 pointer-events-none">
+            <img src="https://pngfre.com/wp-content/uploads/nobita-nobi-27.png" alt="Nobita" className="w-24 h-24 object-contain" />
+            <img src="https://e7.pngegg.com/pngimages/529/496/png-clipart-shizuka-minamoto-doraemon-cartoon-nobita-nobi-cartoon-doraemon-child-hand.png" alt="Shizuka" className="w-24 h-24 object-contain" />
+          </div>
+        <div className="max-w-sm w-full mt-4">
           <div className="text-6xl mb-6 animate-bounce">{ending.emoji}</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4 font-pacifico">
             {ending.title}
@@ -209,34 +213,43 @@ const AdventureStory: React.FC<AdventureStoryProps> = ({ onNext }) => {
             />
           ))}
         </div>
+   <div className="absolute top-0 left-0 right-0 flex justify-between px-6 py-4 pointer-events-none">
+            <img src="https://pngfre.com/wp-content/uploads/nobita-nobi-27.png" alt="Nobita" className="w-24 h-24 object-contain" />
+            <img src="https://e7.pngegg.com/pngimages/529/496/png-clipart-shizuka-minamoto-doraemon-cartoon-nobita-nobi-cartoon-doraemon-child-hand.png" alt="Shizuka" className="w-24 h-24 object-contain" />
+          </div>
+        
+  <div className="text-center mb-5">
+  <h2 className="text-lg font-semibold text-gray-800">
+    {step.title}
+  </h2>
+  <p className="text-sm text-gray-500 mt-1">
+    {step.question}
+  </p>
+</div>
 
-        {/* Story Step */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            {step.title}
-          </h2>
-          <p className="text-gray-600">{step.question}</p>
-        </div>
+<div className="space-y-3">
+  {step.options.map((option, index) => (
+    <button
+      key={index}
+      onClick={() => makeChoice(option.value)}
+      className="w-full flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left
+                 transition-colors hover:border-blue-300 hover:bg-blue-50"
+    >
+      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-500">
+        {typeof option.icon === "string" ? (
+          <span className="text-lg">{option.icon}</span>
+        ) : (
+          <option.icon className="w-5 h-5" />
+        )}
+      </div>
 
-        {/* Options */}
-        <div className="space-y-4">
-          {step.options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => makeChoice(option.value)}
-              className="w-full bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-xl p-4 transition-all transform hover:scale-105 flex items-center space-x-4"
-            >
-              <div className="text-2xl">
-                {typeof option.icon === "string" ? (
-                  option.icon
-                ) : (
-                  <option.icon className="w-6 h-6 text-blue-400" />
-                )}
-              </div>
-              <span className="text-gray-700 font-medium">{option.text}</span>
-            </button>
-          ))}
-        </div>
+      <span className="text-sm font-medium text-gray-700">
+        {option.text}
+      </span>
+    </button>
+  ))}
+</div>
+
 
         {/* Choices preview + Reset */}
         {choices.length > 0 && (

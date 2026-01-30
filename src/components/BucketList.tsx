@@ -1,133 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, Coffee, Camera, Utensils, Plane, Star } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  MapPin,
+  Coffee,
+  Camera,
+  Utensils,
+  Plane,
+  Star,
+  Heart,
+} from "lucide-react";
 
 interface BucketListProps {
   onNext: () => void;
 }
 
+const STORAGE_KEY = "herBucketListChoices";
+
 const BucketList: React.FC<BucketListProps> = ({ onNext }) => {
-  const [clickedItems, setClickedItems] = useState<number[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
 
-  const STORAGE_KEY = 'bucketListSelections';
+  const items= [
+    { id: 1, icon: MapPin, title: "Late-night Walks", description: "Wander under the stars 🌙", color: "bg-indigo-100 text-indigo-600" },
+    { id: 2, icon: Plane, title: "Spontaneous Road Trip", description: "No plan, just us 🚗💨", color: "bg-green-100 text-green-600" },
+    { id: 3, icon: Coffee, title: "Coffee Dates", description: "Find our favorite café ☕", color: "bg-amber-100 text-amber-600" },
+    { id: 4, icon: Star, title: "Stargazing", description: "Make wishes together ✨", color: "bg-purple-100 text-purple-600" },
+    { id: 5, icon: Camera, title: "Cute Photos", description: "Capture silly memories 📸", color: "bg-pink-100 text-pink-600" },
+    { id: 6, icon: Utensils, title: "Cook Together", description: "Our favorite comfort food 🍝", color: "bg-red-100 text-red-600" },
 
-  const bucketListItems = [
-    { id: 1, icon: MapPin, title: "Late-night Walk", description: "Wander under the stars 🌙", color: "bg-indigo-100 text-indigo-600" },
-    { id: 2, icon: Plane, title: "Spontaneous Road Trip", description: "Pick a spot and go! 🚗💨", color: "bg-green-100 text-green-600" },
-    { id: 3, icon: Coffee, title: "Make Coffee Dates", description: "Discover the city's best latte ☕️", color: "bg-yellow-100 text-yellow-600" },
-    { id: 4, icon: Star, title: "Stargaze & Dream", description: "Find constellations & make wishes ✨", color: "bg-purple-100 text-purple-600" },
-    { id: 5, icon: Camera, title: "Photo Booth Fun", description: "Capture goofy & cute memories 📸", color: "bg-pink-100 text-pink-600" },
-    { id: 6, icon: Utensils, title: "Cook Together", description: "Make each other's favorite meal 🍝", color: "bg-red-100 text-red-600" },
-    { id: 8, icon: Coffee, title: "Bookstore Date", description: "Pick books for each other 📚", color: "bg-amber-100 text-amber-600" },
-    { id: 9, icon: Star, title: "Build a Blanket Fort", description: "Snuggle & watch movies 🛌🎬", color: "bg-purple-100 text-purple-600" },
-    { id: 10, icon: Camera, title: "Karaoke Night", description: "Sing your hearts out 🎤", color: "bg-pink-100 text-pink-600" },
-    { id: 11, icon: Plane, title: "Picnic at Sunrise", description: "Coffee & pancakes at dawn ☀️", color: "bg-green-100 text-green-600" },
-    { id: 12, icon: Utensils, title: "Ice Cream Crawl", description: "Taste test the sweetest scoops 🍦", color: "bg-red-100 text-red-600" },
-    { id: 13, icon: MapPin, title: "Secret Notes Exchange", description: "Hide little love notes 💌", color: "bg-blue-100 text-blue-600" },
-    { id: 14, icon: Coffee, title: "Attend a Workshop", description: "Pottery, painting or dance 🎨💃", color: "bg-amber-100 text-amber-600" },
-    { id: 15, icon: Star, title: "Make a Time Capsule", description: "Open it a year from now ⏳", color: "bg-purple-100 text-purple-600" },
+    { id: 7, icon: Heart, title: "Slow Dance at Home", description: "No music needed 💃🕺", color: "bg-rose-100 text-rose-600" },
+    { id: 8, icon: Coffee, title: "Rainy-day Chai Talks", description: "Warm cups & deep talks ☔", color: "bg-yellow-100 text-yellow-600" },
+    { id: 9, icon: MapPin, title: "Get Lost on Purpose", description: "Discover new places 🗺️", color: "bg-blue-100 text-blue-600" },
+    { id: 10, icon: Star, title: "Fall Asleep on Call", description: "Goodnight whispers 🌙📞", color: "bg-purple-100 text-purple-600" },
+    { id: 11, icon: Camera, title: "Sunset Hand-Holding", description: "Watch the sky glow 🌅", color: "bg-pink-100 text-pink-600" },
+    { id: 12, icon: Utensils, title: "Ice Cream Crawl", description: "Every flavor counts 🍦", color: "bg-red-100 text-red-600" },
+
+    { id: 13, icon: Heart, title: "Letters to Future Us", description: "Open them someday 💌", color: "bg-rose-100 text-rose-600" },
+    { id: 14, icon: Coffee, title: "Shared Playlist", description: "Songs that feel like us 🎶", color: "bg-amber-100 text-amber-600" },
+    { id: 15, icon: Star, title: "Celebrate Small Wins", description: "Every moment matters 🎉", color: "bg-purple-100 text-purple-600" },
+    { id: 16, icon: Heart, title: "Random Forehead Kisses", description: "Just because ❤️", color: "bg-pink-100 text-pink-600" },
+    { id: 17, icon: Camera, title: "Laugh Till It Hurts", description: "Stomach-aching laughs 😂", color: "bg-indigo-100 text-indigo-600" },
   ];
 
-  // Load selections from localStorage
+
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setClickedItems(JSON.parse(stored));
-    }
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) setSelected(JSON.parse(saved));
   }, []);
 
-  // Save selections to localStorage
   useEffect(() => {
-    if(clickedItems.length === 0) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clickedItems));
-  }, [clickedItems]);
+    if (selected.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
+    }
+  }, [selected]);
 
-  const handleItemClick = (id: number) => {
-    setClickedItems(prev => 
-      prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
+  const toggle = (id: number) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
-  const canContinue = clickedItems.length >= 5;
-  const allClicked = clickedItems.length === bucketListItems.length;
+  const canContinue = selected.length >= 5;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-pink-50 via-rose-50 to-blue-50">
-      <div className="max-w-md w-full text-center">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-rose-50 via-pink-50 to-white">
+      <div className="w-full max-w-sm text-center">
 
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">
-          Our Dreamy Bucket List 💖
-        </h2>
-        <p className="text-gray-600 italic text-sm sm:text-base mb-5">
-          "Every adventure will be magical, because you'll be with me."
-        </p>
+        {/* Header */}
+        <div className="my-6">
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-3">
+            What moments matter to you? 💭
+          </h2>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Pick at least <span className="font-semibold text-rose-600">5 things</span> you'd love to do together ✨
+          </p>
+        </div>
 
-        <div className="space-y-3 mb-5">
-          {bucketListItems.map((item, index) => {
-            const isClicked = clickedItems.includes(item.id);
+        {/* Cards */}
+        <div className="space-y-2.5 mb-5">
+          {items.map((item, i) => {
             const Icon = item.icon;
+            const active = selected.includes(item.id);
+
             return (
               <div
                 key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                className={`relative bg-white rounded-xl p-3 shadow-md cursor-pointer transform transition-all hover:scale-102 ${
-                  isClicked ? 'shadow-pink-200 ring-2 ring-pink-300' : ''
-                }`}
+                onClick={() => toggle(item.id)}
+                className={`flex items-center gap-3 p-3 rounded-xl bg-white cursor-pointer transition
+                  active:scale-[0.97]
+                  ${active
+                    ? "ring-2 ring-rose-300 shadow-[0_0_18px_rgba(244,63,94,0.35)]"
+                    : "shadow-sm"
+                  }`}
                 style={{
-                  animation: `fadeIn 0.3s ease ${index * 0.04}s both`
+                  animation: `fadeIn 0.25s ease ${i * 0.04}s both`,
                 }}
               >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">{item.description}</p>
-                  </div>
-                  {isClicked && <span className="text-pink-500 text-lg animate-bounce">💕</span>}
+                <div className="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                  <Icon className="w-4.5 h-4.5" />
                 </div>
+
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-800">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {item.description}
+                  </p>
+                </div>
+
+                {active && <span className="text-rose-500 text-base">💗</span>}
               </div>
             );
           })}
         </div>
 
+        {/* Helper text */}
         {!canContinue && (
-          <p className="text-gray-500 text-xs sm:text-sm mb-4">
-            Select at least <span className="font-semibold">5 adventures</span> to continue 🌸
+          <p className="text-xs text-gray-400 mb-4">
+            Pick at least <span className="font-medium">5 moments</span> 💕
           </p>
         )}
 
-        {canContinue && !allClicked && (
+        {/* CTA */}
+        {canContinue && (
           <button
             onClick={onNext}
-            className="w-full bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white px-6 py-2 rounded-full font-semibold text-sm sm:text-base transition-all transform hover:scale-105 mb-3"
+            className="w-full bg-gradient-to-r from-rose-400 to-pink-400 text-white py-2.5 rounded-full text-sm font-semibold transition active:scale-[0.97] shadow-md"
           >
-            Continue → 💌
+            I want to do these with you → 💌
           </button>
         )}
 
-        {allClicked && (
-          <div className="animate-fade-in-up">
-            <div className="bg-gradient-to-r from-pink-50 to-blue-50 rounded-xl p-4 shadow-md mb-4">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Adventure List Complete! 🎉</h3>
-              <p className="text-gray-700 text-sm sm:text-base">
-                "So many beautiful moments waiting for us! And we can keep adding more anytime 💖"
-              </p>
-            </div>
-            <button
-              onClick={onNext}
-              className="w-full bg-gradient-to-r from-blue-400 to-pink-400 hover:from-blue-500 hover:to-pink-500 text-white px-6 py-2 rounded-full font-semibold text-sm sm:text-base transition-all transform hover:scale-105"
-            >
-              Can't wait for these! →
-            </button>
-          </div>
-        )}
-
-        <div className="mt-2">
-          <span className="text-xs sm:text-sm text-gray-500">
-            {clickedItems.length} of {bucketListItems.length} adventures selected
-          </span>
-        </div>
+        {/* Count */}
+        <p className="my-3 text-xs text-gray-400">
+          {selected.length} moments you chose
+        </p>
       </div>
     </div>
   );

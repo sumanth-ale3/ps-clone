@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Play, Pause, Volume2, Heart, Sparkles } from "lucide-react";
-// import VoiceNoteFile from "../assets/mine.mp3";
 
 interface VoiceNoteProps {
   onNext: () => void;
@@ -13,27 +12,30 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({ onNext }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio("https://res.cloudinary.com/dcnl1eovc/video/upload/v1755153187/mine_uw7gyw.mp3");
+    audioRef.current = new Audio(
+      "https://res.cloudinary.com/dcnl1eovc/video/upload/v1755153187/mine_uw7gyw.mp3"
+    );
 
-    audioRef.current.addEventListener("loadedmetadata", () => {
-      setDuration(audioRef.current?.duration || 0);
+    const audio = audioRef.current;
+
+    audio.addEventListener("loadedmetadata", () => {
+      setDuration(audio.duration || 0);
     });
 
-    audioRef.current.addEventListener("timeupdate", () => {
-      if (audioRef.current && duration > 0) {
-        setProgress((audioRef.current.currentTime / duration) * 100);
+    audio.addEventListener("timeupdate", () => {
+      if (duration > 0) {
+        setProgress((audio.currentTime / duration) * 100);
       }
     });
 
-    audioRef.current.addEventListener("ended", () => {
+    audio.addEventListener("ended", () => {
       setIsPlaying(false);
       setProgress(100);
     });
 
     return () => {
-      audioRef.current?.pause();
-      audioRef.current?.removeAttribute("src");
-      audioRef.current?.load();
+      audio.pause();
+      audio.src = "";
     };
   }, [duration]);
 
@@ -54,27 +56,31 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({ onNext }) => {
   };
 
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+    const m = Math.floor(time / 60);
+    const s = Math.floor(time % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-pink-50 to-pink-100">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-gradient-to-br from-pink-100 via-rose-50 to-purple-100">
       <div className="max-w-sm w-full text-center">
-         <h2 className="text-4xl font-bold text-pink-600 mb-2 font-pacifico drop-shadow-lg animate-fade-in">
-          Voice  Note 💌
+        {/* Title */}
+        <h2 className="text-4xl font-pacifico text-pink-600 mb-2 animate-fade-in">
+          A Voice Note 💌
         </h2>
-        <p className="text-pink-500 mb-8 italic animate-fade-in delay-200 font-nunito mt-4">
-          Just for you... straight from my heart ❤️
+        <p className="text-pink-500 italic mb-8 animate-fade-in delay-200">
+          Something I wanted you to hear… just you 💗
         </p>
 
-        <div className="bg-white rounded-3xl p-8 shadow-lg mb-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-tr from-pink-100 via-white to-pink-50 opacity-50 pointer-events-none"></div>
+        {/* Player Card */}
+        <div className="relative bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl overflow-hidden">
+          {/* Soft Glow */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-pink-200 via-white to-purple-100 opacity-40 pointer-events-none" />
 
+          {/* Speaker */}
           <div className="relative mb-6">
-            <div className="w-32 h-32 bg-gradient-to-b from-pink-400 to-pink-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-pink-200">
-              <div className="w-24 h-24 bg-gradient-to-b from-pink-600 to-pink-700 rounded-full flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-b from-pink-400 to-pink-500 mx-auto flex items-center justify-center shadow-lg">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-b from-pink-600 to-pink-700 flex items-center justify-center">
                 <Volume2
                   className={`w-10 h-10 text-white ${
                     isPlaying ? "animate-pulse" : ""
@@ -84,22 +90,25 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({ onNext }) => {
             </div>
           </div>
 
+          {/* Progress */}
           <div className="mb-6 relative z-10">
-            <div className="bg-pink-100 rounded-full h-2 mb-2 overflow-hidden">
+            <div className="h-2 rounded-full bg-pink-100 overflow-hidden">
               <div
-                className="bg-pink-400 h-2 rounded-full transition-all duration-100"
+                className="h-2 bg-gradient-to-r from-pink-400 to-purple-400 transition-all duration-100"
                 style={{ width: `${progress}%` }}
-              ></div>
+              />
             </div>
-            <div className="flex justify-between text-sm text-pink-500">
+            <div className="flex justify-between text-xs text-pink-500 mt-1">
               <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
               <span>{formatTime(duration)}</span>
             </div>
           </div>
 
+          {/* Play Button */}
           <button
             onClick={togglePlay}
-            className="bg-pink-400 hover:bg-pink-500 text-white w-16 h-16 rounded-full flex items-center justify-center transition-all transform hover:scale-105 mx-auto mb-4 shadow-lg"
+            className="w-16 h-16 mx-auto mb-4 rounded-full bg-pink-400 hover:bg-pink-500
+            flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105"
           >
             {isPlaying ? (
               <Pause className="w-8 h-8" />
@@ -108,58 +117,58 @@ const VoiceNote: React.FC<VoiceNoteProps> = ({ onNext }) => {
             )}
           </button>
 
-          <div className="text-pink-600 text-sm italic min-h-[24px] transition-opacity font-medium">
-            {!isPlaying && progress === 0 && "Tap to hear a special message..."}
-            {isPlaying && progress < 20 && "Hey Pragna..."}
-            {progress >= 20 &&
-              progress < 50 &&
-              "I hope you're smiling right now..."}
-            {progress >= 50 &&
-              progress < 80 &&
-              "That smile is my favorite thing..."}
-            {progress >= 80 && progress < 100 && "Can't wait to see you again! 💙"}
+          {/* Timed Messages */}
+          <div className="min-h-[28px] text-sm text-pink-600 italic transition-opacity">
+            {!isPlaying && progress === 0 && "Tap play… I’m right here 💞"}
+            {isPlaying && progress < 20 && "Hey… 💗"}
+            {progress >= 20 && progress < 45 && "I hope you’re smiling right now"}
+            {progress >= 45 && progress < 75 && "That smile is my favorite thing"}
+            {progress >= 75 && progress < 100 && "I mean every word I say to you 💙"}
           </div>
         </div>
 
+        {/* Floating Love */}
         {isPlaying && (
-          <div className="relative h-16 mb-6">
-            {[...Array(5)].map((_, i) => (
+          <div className="relative h-16 mt-6">
+            {[...Array(4)].map((_, i) => (
               <Heart
                 key={i}
-                className={`absolute text-pink-400 w-4 h-4 animate-float opacity-100 transition-opacity`}
+                className="absolute w-4 h-4 text-pink-400 animate-float"
                 style={{
-                  left: `${20 + i * 15}%`,
-                  animationDelay: `${i * 0.5}s`,
-                  animationDuration: `${2 + i * 0.5}s`,
+                  left: `${25 + i * 15}%`,
+                  animationDelay: `${i * 0.6}s`,
                 }}
               />
             ))}
-            {[...Array(3)].map((_, i) => (
+            {[...Array(2)].map((_, i) => (
               <Sparkles
                 key={i}
-                className={`absolute text-yellow-300 w-3 h-3 animate-float opacity-90 transition-opacity`}
+                className="absolute w-3 h-3 text-yellow-300 animate-float"
                 style={{
-                  left: `${10 + i * 25}%`,
-                  animationDelay: `${i * 0.7}s`,
-                  animationDuration: `${3 + i * 0.4}s`,
+                  left: `${35 + i * 25}%`,
+                  animationDelay: `${i * 0.8}s`,
                 }}
               />
             ))}
           </div>
         )}
 
+        {/* Ending */}
         {progress >= 100 && (
-          <div className="animate-fade-in-up">
-            <div className="bg-pink-50 rounded-2xl p-4 mb-6 shadow-inner">
+          <div className="mt-8 animate-fade-in-up">
+            <div className="bg-pink-50 rounded-2xl p-4 shadow-inner mb-6">
               <p className="text-pink-700 font-dancing text-lg leading-relaxed">
-                "With you, even the smallest moments feel special 💕"
+                “With you, even silence feels warm 💕”
               </p>
             </div>
+
             <button
               onClick={onNext}
-              className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105 w-full shadow-lg"
+              className="w-full bg-gradient-to-r from-pink-500 to-purple-500
+              text-white py-3 rounded-full font-semibold shadow-lg
+              transition-transform hover:scale-105"
             >
-              You're kinda amazing → 💫
+              Stay with me a little longer → ✨
             </button>
           </div>
         )}

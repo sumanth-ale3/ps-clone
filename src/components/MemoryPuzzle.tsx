@@ -5,169 +5,160 @@ interface MemoryPuzzleProps {
   onNext: () => void;
 }
 
+const GRID_SIZE = 3; // keep 3x3 but harder
+const EMPTY_TILE = GRID_SIZE * GRID_SIZE - 1;
+const TOTAL_TIME = 150; // reduced from 180 → pressure
+
 const MemoryPuzzle: React.FC<MemoryPuzzleProps> = ({ onNext }) => {
-  const [pieces, setPieces] = useState<number[]>([]);
+  const [tiles, setTiles] = useState<number[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(180); // 3 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [autoSolveOption, setAutoSolveOption] = useState(false);
 
   const imageURL =
-    "https://res.cloudinary.com/dcnl1eovc/image/upload/v1755038871/WhatsApp_Image_2025-08-13_at_04.17.11_993f7f82_scbkdc.jpg";
+    "https://res.cloudinary.com/defswxqkw/image/upload/v1769715755/IMG_0259_fx44yp.jpg";
 
-  // Initialize puzzle pieces
+  /* ---------------- INIT ---------------- */
   useEffect(() => {
     shufflePuzzle();
   }, []);
 
-  // Timer logic
+  /* ---------------- TIMER ---------------- */
   useEffect(() => {
     if (isComplete) return;
     if (timeLeft <= 0) {
       setAutoSolveOption(true);
       return;
     }
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    const timer = setInterval(() => {
+      setTimeLeft((t) => t - 1);
+    }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft, isComplete]);
 
-  const EMPTY_TILE = 8; // consistently use 8 as the empty tile
-
-  // Check if puzzle is solvable (for odd grid size)
-  const isSolvable = (tiles: number[]) => {
-    const inversionCount = tiles
-      .filter((n) => n !== EMPTY_TILE)
-      .reduce((count, current, idx, arr) => {
-        return (
-          count +
-          arr.slice(idx + 1).filter((n) => n < current && n !== EMPTY_TILE)
-            .length
-        );
-      }, 0);
-    // For odd grid (3x3), solvable if inversion count is even
-    return inversionCount % 2 === 0;
-  };
-
+  /* ---------------- SHUFFLE (HARDER) ---------------- */
   const shufflePuzzle = () => {
-    let arr;
-    do {
-      arr = Array.from({ length: 9 }, (_, i) => i);
-      // Do random legal moves from solved state to keep solvability
-      const swap = (i, j) => ([arr[i], arr[j]] = [arr[j], arr[i]]);
-      const moveTile = () => {
-        const emptyIndex = arr.indexOf(EMPTY_TILE);
-        const row = Math.floor(emptyIndex / 3);
-        const col = emptyIndex % 3;
-        const moves = [];
-        if (row > 0) moves.push(emptyIndex - 3);
-        if (row < 2) moves.push(emptyIndex + 3);
-        if (col > 0) moves.push(emptyIndex - 1);
-        if (col < 2) moves.push(emptyIndex + 1);
-        swap(emptyIndex, moves[Math.floor(Math.random() * moves.length)]);
-      };
-      for (let i = 0; i < 20; i++) moveTile();
-    } while (!isSolvable(arr) || arr.every((v, i) => v === i)); // avoid solved state
+    let arr = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
 
-    setPieces(arr);
+    const moveRandom = () => {
+      const emptyIndex = arr.indexOf(EMPTY_TILE);
+      const row = Math.floor(emptyIndex / GRID_SIZE);
+      const col = emptyIndex % GRID_SIZE;
+      const moves: number[] = [];
+
+      if (row > 0) moves.push(emptyIndex - GRID_SIZE);
+      if (row < GRID_SIZE - 1) moves.push(emptyIndex + GRID_SIZE);
+      if (col > 0) moves.push(emptyIndex - 1);
+      if (col < GRID_SIZE - 1) moves.push(emptyIndex + 1);
+
+      const target = moves[Math.floor(Math.random() * moves.length)];
+      [arr[emptyIndex], arr[target]] = [arr[target], arr[emptyIndex]];
+    };
+
+    // 🔥 MUCH harder: 70 random legal moves
+    for (let i = 0; i < 70; i++) moveRandom();
+
+    setTiles(arr);
     setIsComplete(false);
     setShowMessage(false);
     setAutoSolveOption(false);
-    setTimeLeft(180);
+    setTimeLeft(TOTAL_TIME);
   };
 
-  const movePiece = (index: number) => {
-    const emptyIndex = pieces.indexOf(EMPTY_TILE);
-    const canMove =
-      (Math.abs(index - emptyIndex) === 1 &&
-        Math.floor(index / 3) === Math.floor(emptyIndex / 3)) ||
-      Math.abs(index - emptyIndex) === 3;
+  /* ---------------- MOVE TILE ---------------- */
+  const moveTile = (index: number) => {
+    if (isComplete) return;
 
-    if (canMove) {
-      const newPieces = [...pieces];
-      [newPieces[index], newPieces[emptyIndex]] = [
-        newPieces[emptyIndex],
-        newPieces[index],
-      ];
-      setPieces(newPieces);
-      if (newPieces.every((piece, idx) => piece === idx)) handleComplete();
+    const emptyIndex = tiles.indexOf(EMPTY_TILE);
+    const row = Math.floor(index / GRID_SIZE);
+    const col = index % GRID_SIZE;
+    const emptyRow = Math.floor(emptyIndex / GRID_SIZE);
+    const emptyCol = emptyIndex % GRID_SIZE;
+
+    const isAdjacent =
+      (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+      (Math.abs(col - emptyCol) === 1 && row === emptyRow);
+
+    if (!isAdjacent) return;
+
+    const newTiles = [...tiles];
+    [newTiles[index], newTiles[emptyIndex]] = [
+      newTiles[emptyIndex],
+      newTiles[index],
+    ];
+    setTiles(newTiles);
+
+    if (newTiles.every((t, i) => t === i)) {
+      setIsComplete(true);
+      setTimeout(() => setShowMessage(true), 900);
     }
   };
 
-  const handleComplete = () => {
-    setIsComplete(true);
-    setTimeout(() => setShowMessage(true), 1000);
-  };
-
+  /* ---------------- AUTO SOLVE ---------------- */
   const autoSolve = () => {
-    setPieces(Array.from({ length: 9 }, (_, i) => i));
-    handleComplete();
+    setTiles(Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i));
+    setIsComplete(true);
+    setTimeout(() => setShowMessage(true), 700);
   };
 
-  const getPiecePosition = (pieceNumber: number) => {
-    const row = Math.floor(pieceNumber / 3);
-    const col = pieceNumber % 3;
-    return { x: col * 33.33, y: row * 33.33 };
-  };
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)}:${s % 60 < 10 ? "0" : ""}${s % 60}`;
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
+  /* ---------------- RENDER ---------------- */
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-pink-100 py-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-pink-100 to-purple-100 px-6">
       <div className="max-w-sm w-full text-center">
-        <h2 className="text-3xl font-extrabold text-gray-800 mb-2">
-          Memory Puzzle
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          Memory Puzzle 💙
         </h2>
-        <p className="text-gray-600 mb-6">
-          Piece together this sweet memory! 🧩
+        <p className="text-gray-600 mb-4">
+          Put the pieces together just like us 🧩
         </p>
 
-        {/* Timer */}
         {!isComplete && (
-          <div className="flex items-center justify-center mb-4 text-lg font-semibold text-gray-700">
-            <Clock className="w-5 h-5 mr-2 text-blue-500" />
-            {formatTime(timeLeft)}
+          <div className="flex items-center justify-center gap-2 text-gray-700 mb-4">
+            <Clock className="w-5 h-5 text-pink-400" />
+            <span className="font-semibold">{formatTime(timeLeft)}</span>
           </div>
         )}
 
-        {/* Puzzle Grid */}
-        <div className="relative w-80 h-80 bg-gray-200 rounded-2xl shadow-lg mx-auto mb-6 overflow-hidden">
+        {/* PUZZLE */}
+        <div className="relative w-80 h-80 bg-white rounded-2xl shadow-xl mx-auto mb-6 overflow-hidden">
           {isComplete ? (
             <img
               src={imageURL}
-              alt="Completed Puzzle"
+              alt="Complete"
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-1 p-2">
-              {pieces.map((piece, index) => {
-                const position = getPiecePosition(piece);
+            <div className="grid grid-cols-3 grid-rows-3 gap-[2px] p-2 h-full">
+              {tiles.map((tile, idx) => {
+                const row = Math.floor(tile / GRID_SIZE);
+                const col = tile % GRID_SIZE;
+
                 return (
                   <div
-                    key={index}
-                    onClick={() => movePiece(index)}
-                    className={`relative rounded-lg transition-all duration-300 cursor-pointer ${
-                      piece === 8
-                        ? "bg-gray-100"
-                        : "bg-blue-100 hover:bg-blue-200 transform hover:scale-105"
+                    key={idx}
+                    onClick={() => moveTile(idx)}
+                    className={`rounded-lg transition-all duration-200 ${
+                      tile === EMPTY_TILE
+                        ? "bg-transparent"
+                        : "cursor-pointer hover:scale-[1.03]"
                     }`}
                     style={{
                       backgroundImage:
-                        piece !== 8 ? `url("${imageURL}")` : "none",
+                        tile !== EMPTY_TILE ? `url(${imageURL})` : "none",
                       backgroundSize: "320px 320px",
-                      backgroundPosition: `-${(position.x * 320) / 100}px -${
-                        (position.y * 320) / 100
+                      backgroundPosition: `-${col * 106.6}px -${
+                        row * 106.6
                       }px`,
-                      opacity: piece === 8 ? 0.3 : 1,
                     }}
                   >
-                    {piece !== 8 && !isComplete && (
-                      <div className="absolute inset-0 bg-blue-400 bg-opacity-20 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">
-                          {piece + 1}
+                    {tile !== 8 && !isComplete && (
+                      <div className="bg-opacity-20 flex ml-1 mt-1 w-6 h-6 items-center justify-center">
+                        <span className="text-white font-bold text-lg select-none drop-shadow-lg">
+                          {tile + 1}
                         </span>
                       </div>
                     )}
@@ -178,70 +169,49 @@ const MemoryPuzzle: React.FC<MemoryPuzzleProps> = ({ onNext }) => {
           )}
         </div>
 
-        <div className="max-w-xs mx-auto">
-          {/* Controls */}
-          {!isComplete && !autoSolveOption && (
-            <button
-              onClick={shufflePuzzle}
-              className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-full mb-6 flex items-center space-x-2 mx-auto transition-colors"
-            >
-              <Shuffle className="w-4 h-4" />
-              <span>Shuffle Again</span>
-            </button>
-          )}
+        {/* CONTROLS */}
+        {!isComplete && !autoSolveOption && (
+          <button
+            onClick={shufflePuzzle}
+            className="flex items-center gap-2 mx-auto mb-4 px-6 py-2 rounded-full
+            bg-white text-gray-700 shadow hover:scale-105 transition"
+          >
+            <Shuffle className="w-4 h-4" /> Shuffle Again
+          </button>
+        )}
 
-          {/* Auto Solve Option */}
-          {autoSolveOption && !isComplete && (
-            <button
-              onClick={autoSolve}
-              className="bg-yellow-400 hover:bg-yellow-500 text-white px-6 py-2 rounded-full mb-6 flex items-center space-x-2 mx-auto transition-colors"
-            >
-              <Zap className="w-4 h-4" />
-              <span>Time's Up! Solve Automatically</span>
-            </button>
-          )}
+        {autoSolveOption && !isComplete && (
+          <button
+            onClick={autoSolve}
+            className="flex items-center gap-2 mx-auto mb-4 px-6 py-2 rounded-full
+            bg-pink-400 text-white shadow hover:scale-105 transition"
+          >
+            <Zap className="w-4 h-4" /> Too cute to solve 😌
+          </button>
+        )}
 
-          {/* Completion State */}
-          {isComplete && (
-            <div className="animate-fade-in-up">
-              <div className="flex items-center justify-center mb-4">
-                <CheckCircle className="w-8 h-8 text-green-500 mr-2" />
-                <span className="text-xl font-bold text-green-600">
-                  Completed!
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Hidden Message */}
-          {showMessage && (
-            <div className="animate-fade-in-up bg-white rounded-2xl p-6 shadow-lg mb-6 border border-pink-200">
-              <h3 className="text-lg font-bold text-gray-800 mb-3">
-                Hidden Message Unlocked! 💌
-              </h3>
-              <p className="text-gray-700 font-dancing text-lg">
-                "Every moment with you feels like finding the missing piece of a
-                puzzle. You complete the picture in the most beautiful way 💙"
-              </p>
-            </div>
-          )}
-
-          {/* Next Button */}
-          {isComplete && showMessage && (
-            <button
-              onClick={onNext}
-              className="bg-blue-400 hover:bg-blue-500 text-white px-8 py-2 rounded-full font-semibold transition-all transform hover:scale-105 w-48"
-            >
-              What's Next? →
-            </button>
-          )}
-
-          {!isComplete && !autoSolveOption && (
-            <p className="text-gray-500 text-sm">
-              Tap the pieces next to the empty space to move them! 🧩
+        {/* MESSAGE */}
+        {showMessage && (
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-5 shadow-lg mb-4 animate-fade-in">
+            <h3 className="font-bold text-gray-800 mb-2">
+              You Did It 💌
+            </h3>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Every piece fell into place… just like you did in my life.
+              You don't just complete puzzles you complete me 💙
             </p>
-          )}
-        </div>
+          </div>
+        )}
+
+        {isComplete && showMessage && (
+          <button
+            onClick={onNext}
+            className="mt-2 px-8 py-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-400
+            text-white font-semibold shadow hover:scale-105 transition"
+          >
+            Continue the Journey ✨
+          </button>
+        )}
       </div>
     </div>
   );
