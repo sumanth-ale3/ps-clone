@@ -18,6 +18,7 @@ const sections = [
   'songs',
   'spin',
   'countdown',
+  'videosongs',
   'final',
   'cassette'
 ];

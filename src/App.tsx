@@ -11,6 +11,7 @@ import SpinWheel from './components/SpinWheel';
 import TripCountdown from './components/TripCountdown';
 import FinalMessage from './components/FinalMessage';
 import CassettePlayer from './components/CassettePlayer';
+import VideoSongs from './components/VideoSongs';
 import Navigation from './components/Navigation';
 import EasterEgg from './components/EasterEgg';
 
@@ -55,7 +56,9 @@ function App() {
       case 'spin':
         return <SpinWheel onNext={() => setCurrentSection('countdown')} />;
       case 'countdown':
-        return <TripCountdown onNext={() => setCurrentSection('final')} />;
+        return <TripCountdown onNext={() => setCurrentSection('videosongs')} />;
+      case 'videosongs':
+        return <VideoSongs onNext={() => setCurrentSection('final')} />;
       case 'final':
         return <FinalMessage />;
       case 'cassette':
