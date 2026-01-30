@@ -1,220 +1,298 @@
 import React, { useState, useEffect } from "react";
-import { Shuffle, CheckCircle, Clock, Zap } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 
-interface MemoryPuzzleProps {
+interface SpinWheelProps {
   onNext: () => void;
 }
 
-const GRID_SIZE = 3; // keep 3x3 but harder
-const EMPTY_TILE = GRID_SIZE * GRID_SIZE - 1;
-const TOTAL_TIME = 150; // reduced from 180 → pressure
+const STORAGE_KEY = "spinWheelResults_v2";
 
-const MemoryPuzzle: React.FC<MemoryPuzzleProps> = ({ onNext }) => {
-  const [tiles, setTiles] = useState<number[]>([]);
-  const [isComplete, setIsComplete] = useState(false);
-  const [showMessage, setShowMessage] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [autoSolveOption, setAutoSolveOption] = useState(false);
+type Prize = {
+  id: string;
+  text: string;
+  emoji: string;
+  color: string;
+  description: string;
+};
 
-  const imageURL =
-    "https://res.cloudinary.com/defswxqkw/image/upload/v1769715755/IMG_0259_fx44yp.jpg";
+const prizes: Prize[] = [
+  {
+    id: "warm_hug",
+    text: "Warm Hug",
+    emoji: "🤗",
+    color: "#f9a8d4",
+    description:
+      "A long hug where I hold you a little tighter than usual… and don’t let go first.",
+  },
+  {
+    id: "whisper",
+    text: "Whisper Something",
+    emoji: "💋",
+    color: "#f472b6",
+    description:
+      "I lean in close and whisper something that makes you smile (or blush).",
+  },
+  {
+    id: "forehead_kiss",
+    text: "Forehead Kiss",
+    emoji: "😘",
+    color: "#fb7185",
+    description:
+      "Soft, slow, reassuring — the kind that makes you feel safe instantly.",
+  },
+  {
+    id: "coffee_date",
+    text: "Coffee Date",
+    emoji: "☕",
+    color: "#fde68a",
+    description:
+      "Coffee, eye contact, teasing smiles, and losing track of time.",
+  },
+  {
+    id: "slow_dance",
+    text: "Slow Dance",
+    emoji: "💃",
+    color: "#e879f9",
+    description:
+      "No music needed. Just sway, breathe, and forget the world exists.",
+  },
+  {
+    id: "playful_dare",
+    text: "Playful Dare",
+    emoji: "🔥",
+    color: "#fb923c",
+    description: "A harmless but flirty dare… you choose how bold it gets 😏",
+  },
+  {
+    id: "movie_cuddle",
+    text: "Movie + Cuddle",
+    emoji: "🎬",
+    color: "#c4b5fd",
+    description:
+      "Your movie, my shoulder, shared blanket — zero interruptions.",
+  },
+  {
+    id: "surprise_kiss",
+    text: "Surprise Kiss",
+    emoji: "💖",
+    color: "#f87171",
+    description: "Unexpected, gentle, and right when you least expect it.",
+  },
+];
 
-  /* ---------------- INIT ---------------- */
+const SEGMENT = 360 / prizes.length;
+
+const SpinWheel: React.FC<SpinWheelProps> = ({ onNext }) => {
+  const [rotation, setRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [currentPrizeId, setCurrentPrizeId] = useState<string | null>(null);
+  const [results, setResults] = useState<string[]>([]);
+
+  const spinsLeft = 3 - results.length;
+
+  /* ---------- Load stored results ---------- */
   useEffect(() => {
-    shufflePuzzle();
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) setResults(JSON.parse(saved));
   }, []);
 
-  /* ---------------- TIMER ---------------- */
+  /* ---------- Persist results ---------- */
   useEffect(() => {
-    if (isComplete) return;
-    if (timeLeft <= 0) {
-      setAutoSolveOption(true);
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeft((t) => t - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft, isComplete]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
+  }, [results]);
 
-  /* ---------------- SHUFFLE (HARDER) ---------------- */
-  const shufflePuzzle = () => {
-    let arr = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i);
+  const spinWheel = () => {
+    if (isSpinning || spinsLeft <= 0) return;
 
-    const moveRandom = () => {
-      const emptyIndex = arr.indexOf(EMPTY_TILE);
-      const row = Math.floor(emptyIndex / GRID_SIZE);
-      const col = emptyIndex % GRID_SIZE;
-      const moves: number[] = [];
+    setIsSpinning(true);
+    setCurrentPrizeId(null);
 
-      if (row > 0) moves.push(emptyIndex - GRID_SIZE);
-      if (row < GRID_SIZE - 1) moves.push(emptyIndex + GRID_SIZE);
-      if (col > 0) moves.push(emptyIndex - 1);
-      if (col < GRID_SIZE - 1) moves.push(emptyIndex + 1);
+    // 1️⃣ Pick prize FIRST
+    const prizeIndex = Math.floor(Math.random() * prizes.length);
+    const prize = prizes[prizeIndex];
 
-      const target = moves[Math.floor(Math.random() * moves.length)];
-      [arr[emptyIndex], arr[target]] = [arr[target], arr[emptyIndex]];
-    };
+    // 2️⃣ Calculate exact angle for that prize
+    // Pointer is at top (0deg)
+    // conic-gradient starts at -90deg
+    const prizeAngle = prizeIndex * SEGMENT + SEGMENT / 2;
 
-    // 🔥 MUCH harder: 70 random legal moves
-    for (let i = 0; i < 70; i++) moveRandom();
+    const spins = 4 + Math.random() * 2;
 
-    setTiles(arr);
-    setIsComplete(false);
-    setShowMessage(false);
-    setAutoSolveOption(false);
-    setTimeLeft(TOTAL_TIME);
+    const totalRotation = rotation + spins * 360 - prizeAngle;
+
+    setRotation(totalRotation);
+
+    // 3️⃣ After animation, show SAME prize
+    setTimeout(() => {
+      setIsSpinning(false);
+      setCurrentPrizeId(prize.id);
+      setResults((prev) => [...prev, prize.id]);
+    }, 3200);
+  };
+  const resetAll = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setRotation(0);
+    setResults([]);
+    setCurrentPrizeId(null);
   };
 
-  /* ---------------- MOVE TILE ---------------- */
-  const moveTile = (index: number) => {
-    if (isComplete) return;
+  const getPrize = (id: string) => prizes.find((p) => p.id === id)!;
 
-    const emptyIndex = tiles.indexOf(EMPTY_TILE);
-    const row = Math.floor(index / GRID_SIZE);
-    const col = index % GRID_SIZE;
-    const emptyRow = Math.floor(emptyIndex / GRID_SIZE);
-    const emptyCol = emptyIndex % GRID_SIZE;
-
-    const isAdjacent =
-      (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
-      (Math.abs(col - emptyCol) === 1 && row === emptyRow);
-
-    if (!isAdjacent) return;
-
-    const newTiles = [...tiles];
-    [newTiles[index], newTiles[emptyIndex]] = [
-      newTiles[emptyIndex],
-      newTiles[index],
-    ];
-    setTiles(newTiles);
-
-    if (newTiles.every((t, i) => t === i)) {
-      setIsComplete(true);
-      setTimeout(() => setShowMessage(true), 900);
-    }
-  };
-
-  /* ---------------- AUTO SOLVE ---------------- */
-  const autoSolve = () => {
-    setTiles(Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => i));
-    setIsComplete(true);
-    setTimeout(() => setShowMessage(true), 700);
-  };
-
-  const formatTime = (s: number) =>
-    `${Math.floor(s / 60)}:${s % 60 < 10 ? "0" : ""}${s % 60}`;
-
-  /* ---------------- RENDER ---------------- */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-pink-100 to-purple-100 px-6">
-      <div className="max-w-sm w-full text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Memory Puzzle 💙
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-100 via-pink-50 to-white px-4">
+      <div className="w-full max-w-sm text-center">
+        {/* Header */}
+        <h2 className="text-[22px] font-bold text-rose-600 mb-1 font-pacifico">
+          Spin & See What I Owe You 💞
         </h2>
-        <p className="text-gray-600 mb-4">
-          Put the pieces together just like us 🧩
+        <p className="text-sm text-rose-400 mb-5 italic">
+          {spinsLeft > 0
+            ? `You have ${spinsLeft} spin${spinsLeft > 1 ? "s" : ""} left ✨`
+            : "Your moments are decided 💖"}
         </p>
 
-        {!isComplete && (
-          <div className="flex items-center justify-center gap-2 text-gray-700 mb-4">
-            <Clock className="w-5 h-5 text-pink-400" />
-            <span className="font-semibold">{formatTime(timeLeft)}</span>
-          </div>
-        )}
-
-        {/* PUZZLE */}
-        <div className="relative w-80 h-80 bg-white rounded-2xl shadow-xl mx-auto mb-6 overflow-hidden">
-          {isComplete ? (
-            <img
-              src={imageURL}
-              alt="Complete"
-              className="w-full h-full object-cover"
+        {/* Wheel */}
+        <div className="relative w-64 h-64 mx-auto mb-6 isolate">
+          <div
+            className="absolute inset-0 rounded-full transition-transform duration-[3200ms]
+            ease-[cubic-bezier(0.22,1,0.36,1)]
+            shadow-[0_0_25px_rgba(244,63,94,0.25)]"
+            style={{ transform: `rotate(${rotation}deg)` }}
+          >
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `conic-gradient(
+                  from -90deg,
+                  ${prizes
+                    .map(
+                      (p, i) =>
+                        `${p.color} ${i * SEGMENT}deg ${(i + 1) * SEGMENT}deg`,
+                    )
+                    .join(",")}
+                )`,
+              }}
             />
-          ) : (
-            <div className="grid grid-cols-3 grid-rows-3 gap-[2px] p-2 h-full">
-              {tiles.map((tile, idx) => {
-                const row = Math.floor(tile / GRID_SIZE);
-                const col = tile % GRID_SIZE;
 
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => moveTile(idx)}
-                    className={`rounded-lg transition-all duration-200 ${
-                      tile === EMPTY_TILE
-                        ? "bg-transparent"
-                        : "cursor-pointer hover:scale-[1.03]"
-                    }`}
-                    style={{
-                      backgroundImage:
-                        tile !== EMPTY_TILE ? `url(${imageURL})` : "none",
-                      backgroundSize: "320px 320px",
-                      backgroundPosition: `-${col * 106.6}px -${
-                        row * 106.6
-                      }px`,
-                    }}
-                  >
-                    {tile !== 8 && !isComplete && (
-                      <div className="bg-opacity-20 flex ml-1 mt-1 w-6 h-6 items-center justify-center">
-                        <span className="text-white font-bold text-lg select-none drop-shadow-lg">
-                          {tile + 1}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+            {prizes.map((p, i) => {
+              const angle = i * SEGMENT + SEGMENT / 2;
+              const rad = (angle * Math.PI) / 180;
+              const x = 128 + 80 * Math.cos(rad - Math.PI / 2);
+              const y = 128 + 80 * Math.sin(rad - Math.PI / 2);
+
+              return (
+                <div
+                  key={p.id}
+                  className="absolute text-center text-[10px] font-semibold text-rose-900"
+                  style={{
+                    left: x,
+                    top: y,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <div className="text-base">{p.emoji}</div>
+                  <div>{p.text}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl animate-pulse">
+          </div> */}
+
+          <div className="absolute inset-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-pink-300">
+            💘
+          </div>
         </div>
 
-        {/* CONTROLS */}
-        {!isComplete && !autoSolveOption && (
+        {/* Spin Button */}
+        {spinsLeft > 0 && (
           <button
-            onClick={shufflePuzzle}
-            className="flex items-center gap-2 mx-auto mb-4 px-6 py-2 rounded-full
-            bg-white text-gray-700 shadow hover:scale-105 transition"
+            onClick={spinWheel}
+            disabled={isSpinning}
+            className="w-full bg-gradient-to-r from-pink-400 to-rose-500
+            text-white py-3 rounded-full font-semibold shadow-md
+            transition active:scale-[0.97] disabled:opacity-60"
           >
-            <Shuffle className="w-4 h-4" /> Shuffle Again
+            {isSpinning ? "Spinning…" : "Spin"}
           </button>
         )}
 
-        {autoSolveOption && !isComplete && (
-          <button
-            onClick={autoSolve}
-            className="flex items-center gap-2 mx-auto mb-4 px-6 py-2 rounded-full
-            bg-pink-400 text-white shadow hover:scale-105 transition"
-          >
-            <Zap className="w-4 h-4" /> Too cute to solve 😌
-          </button>
-        )}
-
-        {/* MESSAGE */}
-        {showMessage && (
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-5 shadow-lg mb-4 animate-fade-in">
-            <h3 className="font-bold text-gray-800 mb-2">
-              You Did It 💌
-            </h3>
-            <p className="text-gray-700 text-sm leading-relaxed">
-              Every piece fell into place… just like you did in my life.
-              You don't just complete puzzles you complete me 💙
+        {/* Current Spin Result */}
+        {currentPrizeId && (
+          <div className="mt-5 bg-white/85 rounded-xl p-4 shadow border border-rose-200">
+            <div className="text-3xl">{getPrize(currentPrizeId).emoji}</div>
+            <p className="font-semibold text-rose-600">
+              {getPrize(currentPrizeId).text}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              {getPrize(currentPrizeId).description}
             </p>
           </div>
         )}
 
-        {isComplete && showMessage && (
-          <button
-            onClick={onNext}
-            className="mt-2 px-8 py-3 rounded-full bg-gradient-to-r from-pink-400 to-purple-400
-            text-white font-semibold shadow hover:scale-105 transition"
-          >
-            Continue the Journey ✨
-          </button>
+        {/* Previous Spins */}
+        {results.length > 0 && (
+          <div className="mt-4">
+            <p className="text-xs text-gray-400 mb-2">Your spins so far</p>
+            <div className="flex justify-center gap-3">
+              {results.map((id, idx) => {
+                const p = getPrize(id);
+                return (
+                  <div key={idx} className="text-center">
+                    <div className="text-2xl">{p.emoji}</div>
+                    <p className="text-[10px] text-gray-600">{p.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Final Screen */}
+        {results.length === 3 && (
+          <div className="mt-6 bg-white/90 rounded-xl p-5 shadow-lg border border-rose-200">
+            <p className="text-sm text-rose-500 font-medium mb-2">
+              These are your moments 💖
+            </p>
+
+            <div className="flex justify-center gap-4 mb-3">
+              {results.map((id, idx) => {
+                const p = getPrize(id);
+                return (
+                  <div key={idx} className="text-center">
+                    <div className="text-3xl">{p.emoji}</div>
+                    <p className="text-xs text-gray-600">{p.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-xs text-gray-500 italic mb-4">
+              Take a screenshot if you want to keep this ✨
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={resetAll}
+                className="flex-1 bg-white text-rose-500 border border-rose-300
+                py-2 rounded-full text-sm font-semibold shadow"
+              >
+                Retry
+              </button>
+              <button
+                onClick={onNext}
+                className="flex-1 bg-gradient-to-r from-rose-400 to-pink-500
+                text-white py-2 rounded-full text-sm font-semibold shadow"
+              >
+                Continue 💌
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default MemoryPuzzle;
+export default SpinWheel;

@@ -13,24 +13,11 @@ import FinalMessage from './components/FinalMessage';
 import Navigation from './components/Navigation';
 import EasterEgg from './components/EasterEgg';
 
-const sections = [
-  'splash',
-  'lovemeter', 
-  'adventure',
-  'puzzle',
-  'voice',
-  'scratch',
-  'bucketlist',
-  'songs',
-  'spin',
-  'countdown',
-  'final'
-];
+
 
 function App() {
   const [currentSection, setCurrentSection] = useState('splash');
   const [showEasterEgg, setShowEasterEgg] = useState(false);
-  const [isDark, setIsDark] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -39,15 +26,7 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // useEffect(() => {
-  //   // Auto-advance from splash screen after 5 seconds
-  //   if (currentSection === 'splash') {
-  //     const timer = setTimeout(() => {
-  //       setCurrentSection('lovemeter');
-  //     }, 5000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [currentSection]);
+
 
   const navigateToSection = (section: string) => {
     setCurrentSection(section);
@@ -84,11 +63,7 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${
-      isDark 
-        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' 
-        : 'gradient-romantic animate-gradient-shift'
-    }`}>
+    <div className={`min-h-screen transition-all duration-500 gradient-romantic animate-gradient-shift`}>
       {/* Background Pattern */}
       <div className="fixed inset-0 opacity-10 pointer-events-none overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-pink-100 to-purple-100 animate-gradient-shift"></div>
@@ -146,26 +121,69 @@ function App() {
         <Navigation 
           currentSection={currentSection}
           onNavigate={navigateToSection}
-          isDark={isDark}
+          isDark={false}
         />
       )}
 
       {/* Easter Egg Modal */}
-      {showEasterEgg && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card-romantic rounded-3xl p-8 max-w-sm w-full text-center animate-bounce-in shadow-dreamy">
-            <div className="text-7xl mb-6 animate-heart-beat">🎉</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3 text-glow-pink">You found the secret!</h3>
-            <p className="text-gray-600 mb-6 font-dancing text-lg">Bonus hug unlocked when you're back! 🤗</p>
-            <button 
-              onClick={() => setShowEasterEgg(false)}
-              className="btn-romantic text-white px-8 py-3 rounded-full font-semibold text-lg focus-romantic"
-            >
-              Aww, thanks! 💙
-            </button>
-          </div>
-        </div>
-      )}
+{showEasterEgg && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="card-romantic rounded-3xl p-8 max-w-sm w-full text-center animate-bounce-in shadow-dreamy">
+
+      {/* Voucher Icon */}
+      <div className="text-6xl mb-5 animate-heart-beat">💝</div>
+
+      <h3 className="text-2xl font-serif text-rose-600 mb-3">
+        You unlocked something special
+      </h3>
+
+      <p className="text-gray-700 font-serif italic leading-relaxed mb-4">
+        Because you noticed the little things…
+        you’ve earned something just for you.
+      </p>
+
+      {/* Voucher Card */}
+      <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-4 border border-rose-200 mb-5 shadow-sm">
+        <p className="text-sm text-gray-600 uppercase tracking-widest mb-1">
+          Love Voucher
+        </p>
+        <p className="text-lg font-semibold text-rose-600">
+          One “No-Questions-Asked” Day
+        </p>
+        <p className="text-xs text-gray-500 mt-2">
+          Redeemable anytime, anywhere 💗
+        </p>
+      </div>
+
+      <p className="text-sm text-gray-500 mb-6 font-clean">
+        Use this whenever you want —
+        for a date, a trip, or a day that’s all about you.
+      </p>
+
+      <button
+        onClick={() => setShowEasterEgg(false)}
+        className="bg-gradient-to-r from-rose-400 to-pink-400
+                   hover:from-rose-500 hover:to-pink-500
+                   text-white px-8 py-3 rounded-full
+                   font-serif text-lg
+                   transition-all duration-500
+                   hover:scale-[1.04]
+                   shadow-[0_10px_30px_-10px_rgba(244,114,182,0.7)]
+                   focus:outline-none"
+      >
+        I’ll save this 💖
+      </button>
+
+      {/* playful footer */}
+      <p className="mt-4 text-xs text-gray-400 italic">
+        Valid forever. No expiry. No escape 😉
+      </p>
+
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }
